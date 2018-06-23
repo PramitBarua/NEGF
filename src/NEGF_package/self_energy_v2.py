@@ -8,16 +8,20 @@ __version__ = "1"
 __maintainer__ = "Pramit Barua"
 __email__ = ["pramit.barua@student.kit.edu", "pramit.barua@gmail.com"]
 
+'''
+this function calculates the g00 and sigma 
+'''
+
 import numpy as np
+import time
 
 def self_energy(energy, h, t0_matrix):
+    start_time = time.time()
     es = energy*np.eye(len(h))-h
     
     e = energy*np.eye(len(h))-h
     a = -t0_matrix
     b = -np.matrix.getH(t0_matrix)
-    
-    
     
     while((np.linalg.norm(abs(a), ord='fro') + np.linalg.norm(abs(b), ord='fro')) > 0.001):
         g = np.linalg.inv(e)
@@ -30,6 +34,9 @@ def self_energy(energy, h, t0_matrix):
         b = -b @ g @ b
     
     g = np.linalg.inv(es)
-    return t0_matrix @ g @ np.matrix.getH(t0_matrix), np.trace(g)    
-#     return g, np.trace(g) 
+    sigma = t0_matrix @ g @ np.matrix.getH(t0_matrix)
+    end_ts = time.time()
+    total_time = end_ts-start_time
+#     return t0_matrix @ g @ np.matrix.getH(t0_matrix), np.trace(g)    
+    return sigma, np.trace(g), total_time
         

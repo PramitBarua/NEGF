@@ -9,46 +9,49 @@ __maintainer__ = "Pramit Barua"
 __email__ = ["pramit.barua@student.kit.edu", "pramit.barua@gmail.com"]
 
 '''
-This code is for one electrode is 2D and another electrode is 1D. The quantum 
-system is 3 atom connected in a triangular shape
+
 '''
 
-from NEGF_package.load_input_v1 import load_input
-# from yaml_loader import CSV_loader
-# from self_energy_v2 import self_energy
+from src.NEGF_package.load_write_files_v1 import load_input
+from src.NEGF_package.load_write_files_v1 import write_data
+from src.NEGF_package.self_energy_v2 import self_energy
+from src.NEGF_package.display_data_v1 import display_data
+
 
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 import argparse
+import time
+
+def system_gs(item_E, hc, sigma_l, sigma_r):
+    start_time = time.time()
+    gs = np.linalg.inv(item_E*np.eye(len(hc)) - hc - sigma_l - sigma_r)
+    end_ts = time.time()
+    total_time = end_ts-start_time
+    return gs, total_time
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-FN", "--Folder_Name",
-                        help="Name of the folder that contains input files ")
-                        
-#     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    load_input('zigzag(2,0)_3')
-    '''
-    call the function that can read the .dat files and return in numpy
-    in function it has to identity the folder, read the file with appropriate 
-    name(check the name of the file and assign it to appropriate variable)
-    '''
+    start_time = time.time()
+    parser = argparse.ArgumentParser(description='Calculate and display DOS '+
+                                     'and transmission of the quantum system.')
+    parser.add_argument("Folder_Name",
+                        help="Name of the folder that contains input files")
+    parser.add_argument("-p","--plot", default = 'y',
+                        help="(y/n) for plotting the data")
+    parser.add_argument("-t","--timing", default = 'y',
+                        help="(y/n) for keep track of the exicution time")
+    
     args = parser.parse_args()
-    print(args.Folder_Name)
-    data = yaml_loader(args.File_Name)
+    time_list = []
+    #get the current location
+    location = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     
-#     t0 = float(data['t0'])
-#     eta = float(data['eta'])
-    hc = CSV_loader(data['hc'])
-    hctl = CSV_loader(data['hctl'])
-    hctr = CSV_loader(data['hctr'])
+    hc, hctr, hctl, time_took = load_input(location, 'input', args.Folder_Name)
+    time_list.append('time took to load file: %f' % (time_took))
     
-#     eig_val, eig_vec = np.linalg.eig(hc)
-#     print('eigen value of the quantum system : '+'\n'+ str(eig_val))
     
-    e_cap = np.linspace(-4*t0, 4*t0, 1000)
-    e_cap = e_cap+1j*eta
+    e_cap = np.linspace(-2, 2, 1000)
+    e_cap = e_cap+1j*0.001
     
     g00_l = np.empty(len(e_cap), dtype=complex)
     g00_r = np.empty(len(e_cap), dtype=complex)
@@ -58,10 +61,14 @@ if __name__ == '__main__':
     transmission_tra = np.empty(len(e_cap), dtype=complex)
      
     for idx1, item_E in enumerate(e_cap):
-        sigma_l, g00_l[idx1] = self_energy(item_E, hc, hctl)
-        sigma_r, g00_r[idx1] = self_energy(item_E, hc, hctr)
+        sigma_l, g00_l[idx1], time_took  = self_energy(item_E, hc, hctl)
+        time_list.append('time took to calculate sigma_l: %f' % (time_took))
+        sigma_r, g00_r[idx1], time_took = self_energy(item_E, hc, hctr)
+        time_list.append('time took to calculate sigma_r: %f' % (time_took))
                         
-        gs[idx1] = np.linalg.inv(item_E*np.eye(len(hc)) - hc - sigma_l - sigma_r)
+#         gs[idx1] = np.linalg.inv(item_E*np.eye(len(hc)) - hc - sigma_l - sigma_r)
+        gs[idx1], time_took = system_gs(item_E, hc, sigma_l, sigma_r)
+        time_list.append('time took to calculate system_gs: %f' % (time_took))
         gs_tra[idx1] = np.trace(gs[idx1])
 #            
         gamma_l = 1j*(sigma_l-np.matrix.getH(sigma_l))
@@ -69,29 +76,16 @@ if __name__ == '__main__':
 #            
         transmission = gamma_l @ gs[idx1] @ gamma_r @ np.matrix.getH(gs[idx1])
         transmission_tra[idx1] = np.trace(transmission)
-     
-#     plt.figure(1)
-# #     line2 = plt.plot(e_cap, g00_tra.real, '-.', label='Real')
-#     line3 = plt.plot(e_cap, np.imag(sigma_l_trace), label='Imag')
-#     plt.xlabel('Energy')
-#     plt.ylabel('Density of state')
-#     plt.legend()
-#     plt.grid()
     
+    end_ts = time.time()
+    time_took = end_ts-start_time   
+    time_list.append('time took for total calculation %f' % (time_took)) 
     
-    plt.figure(2)
-    line3 = plt.plot(e_cap, -(1/np.pi)*np.imag(gs_tra), label='Imag')
-    plt.xlabel('Energy')
-    plt.ylabel('Density of state')
-    plt.title('DOS of system')
-    plt.legend()
-    plt.grid()
-         
-    plt.figure(3)
-    line3 = plt.plot(e_cap, transmission_tra)
-    plt.xlabel('Energy')
-    plt.ylabel('Transmission')
-    plt.title('Transmission of system')
-    plt.grid()
-#      
-    plt.show()
+    if args.timing == 'y' or args.timing == 'Y':
+        write_data(location, 'output', args.Folder_Name, E = e_cap, DOS = gs_tra, T = transmission_tra, time=time_list)
+    else:
+        write_data(location, 'output', args.Folder_Name, E = e_cap, DOS = gs_tra, T = transmission_tra)
+        
+    
+    display_data(e_cap, gs_tra, transmission_tra, args.Folder_Name, args.plot)
+    
