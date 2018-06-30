@@ -60,6 +60,6 @@ if __name__ == '__main__':
     location = location[:location.find('src')] 
     E, DOS, T, time_took= load_input(location, 'output', 'zigzag(2,0)_1', 'test')
     if E.size != 0:
-        display_data(E, DOS, T)
+        display_data(E, DOS, T, 'random_test', 'y')
     
     

@@ -39,6 +39,7 @@ import time
 def load_input(location, input_type, target_folder_name):    
     start_time = time.time()
     target_location = os.path.join(location, input_type, target_folder_name)
+    total_time = 0.0
     
     if os.path.isdir(target_location):
         f = []
@@ -58,6 +59,18 @@ def load_input(location, input_type, target_folder_name):
                 hn1 = np.loadtxt(os.path.join(location, input_type, 
                                               target_folder_name, file), 
                                               delimiter=',')
+            elif file=='s00.dat':
+                s00 = np.loadtxt(os.path.join(location, input_type, 
+                                              target_folder_name, file), 
+                                              delimiter=',')
+            elif file=='sp1.dat':
+                sp1 = np.loadtxt(os.path.join(location, input_type, 
+                                              target_folder_name, file), 
+                                              delimiter=',')
+            elif file=='sn1.dat':
+                sn1 = np.loadtxt(os.path.join(location, input_type, 
+                                              target_folder_name, file), 
+                                              delimiter=',')
             elif file=='T.dat':
                 T = np.loadtxt(os.path.join(location, input_type, 
                                             target_folder_name, file), 
@@ -74,14 +87,91 @@ def load_input(location, input_type, target_folder_name):
         end_ts = time.time()
         total_time = end_ts-start_time
         if 'h00' and 'hp1' and 'hn1' in locals():
-            return h00, hp1, hn1, total_time
+            if h00.shape == hp1.shape == hn1.shape:
+                if 's00' and 'sp1' and 'sn1' in locals():
+                    if h00.shape == s00.shape == sp1.shape == sn1.shape:
+                        matrix_data = {'h00': h00,
+                                       'hp1': hp1,
+                                       'hn1': hn1,
+                                       's00': s00,
+                                       'sp1': sp1,
+                                       'sn1': sn1}
+                        return matrix_data, total_time   
+                    else:
+                        print('Matrix dimension mismatched\nCan not proceed further.')
+                        write_data(location, 'output', target_folder_name, 
+                                   message = ['=== Matrix dimension mismatched. Can not proceed further. ==='])
+                        matrix_data = {'h00': np.array([]),
+                                       'hp1': np.array([]),
+                                       'hn1': np.array([]),
+                                       's00': np.array([]),
+                                       'sp1': np.array([]),
+                                       'sn1': np.array([])}
+                        return matrix_data, total_time                                             
+                else:
+                    matrix_data = {'h00': h00,
+                                   'hp1': hp1,
+                                   'hn1': hn1,
+                                   's00': np.array([]),
+                                   'sp1': np.array([]),
+                                   'sn1': np.array([])}
+                    return matrix_data, total_time
+            else:
+                print('Matrix dimension mismatched\nCan not proceed further.')
+                write_data(location, 'output', target_folder_name, 
+                           message = ['=== Matrix dimension mismatched. Can not proceed further. ==='])
+                matrix_data = {'h00': np.array([]),
+                               'hp1': np.array([]),
+                               'hn1': np.array([]),
+                               's00': np.array([]),
+                               'sp1': np.array([]),
+                               'sn1': np.array([])}
+                return matrix_data, total_time
         elif 'T' and 'DOS' and 'E' in locals():
-            return E, DOS, T, total_time
+            if E.shape == T.shape == DOS.shape:  
+                matrix_data = {'E': E,
+                               'DOS': DOS,
+                               'T': T}
+                return matrix_data, total_time
+            else:
+                print('Input matrix dimension is mismatched\nCan not proceed further.')                
+                matrix_data = {'E': np.array([]),
+                               'DOS': np.array([]),
+                               'T': np.array([])}
+                return matrix_data, total_time
         else:
-            print('some files failed to load')
+            print('Folder exists. However, files failed to load')
+            if input_type == 'input':
+                write_data(location, 'output', target_folder_name, 
+                           message = ['=== Folder exists. However, files failed to load ==='])
+                matrix_data = {'h00': np.array([]),
+                               'hp1': np.array([]),
+                               'hn1': np.array([]),
+                               's00': np.array([]),
+                               'sp1': np.array([]),
+                               'sn1': np.array([])}
+                return matrix_data, total_time
+            else:
+                matrix_data = {'E': np.array([]),
+                               'DOS': np.array([]),
+                               'T': np.array([])}
+                return matrix_data, total_time
     else:
         print('Folder does not exist')
-        return np.array([]), np.array([]), np.array([]) 
+        if input_type == 'input':
+            write_data(location, 'output', target_folder_name, message = ['=== Folder does not exist ==='])
+            matrix_data = {'h00': np.array([]),
+                           'hp1': np.array([]),
+                           'hn1': np.array([]),
+                           's00': np.array([]),
+                           'sp1': np.array([]),
+                           'sn1': np.array([])}
+            return matrix_data, total_time
+        else:
+            matrix_data = {'E': np.array([]),
+                           'DOS': np.array([]),
+                           'T': np.array([])}
+            return matrix_data, total_time
     
 def write_data(location, input_type, target_folder_name, **kargs):
     target_location = os.path.join(location, input_type, target_folder_name)
@@ -94,9 +184,9 @@ def write_data(location, input_type, target_folder_name, **kargs):
         np.savetxt(os.path.join(target_location, 'DOS.dat'), kargs['DOS'].view(float), delimiter=',')
     if 'T' in kargs:
         np.savetxt(os.path.join(target_location, 'T.dat'), kargs['T'].view(float), delimiter=',')
-    if 'time' in kargs:
-        with open(os.path.join(target_location, 'time.dat'), "w") as f:
-            for line in kargs['time']:
+    if 'message' in kargs:
+        with open(os.path.join(target_location, 'output.out'), "a+") as f:
+            for line in kargs['message']:
                 f.write(str(line) +"\n")
     
     
