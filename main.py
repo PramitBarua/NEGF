@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument("-p","--plot", default = 'y',
                         help="(y/n) for plotting the data")
     parser.add_argument("-t","--timing", default = 'y',
-                        help="(y/n) for keep track of the exicution time")
+                        help="(y/n) for keep track of the execution time")
     
     args = parser.parse_args()
     

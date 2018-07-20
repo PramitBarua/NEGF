@@ -1,0 +1,13 @@
+=== NEGF starts ===
+=== Matrix has been loaded ===
+=== NEGF has completed ===
+=== Saving Data ===
+
+=== Time ===
+time took to load file: 0.008995
+average time to calculate g00_l 0.005339
+average time to calculate g00_r 0.000964
+average time to calculate gs 0.000005
+time took for total calculation 6.712138 
+
+=== Display ===
