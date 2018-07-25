@@ -25,7 +25,7 @@ import time
 
 def system_gs(item_E, hc, sh, sigma_l, sigma_r):
     start_time = time.time()
-    gs = np.linalg.inv(item_E*sh - hc - sigma_l - sigma_r)
+    gs = np.linalg.inv(item_E*np.eye(len(sh))@sh - hc - sigma_l - sigma_r)
     end_ts = time.time()
     total_time = end_ts-start_time
     return gs, total_time
@@ -55,14 +55,14 @@ if __name__ == '__main__':
     
     if data_matrix['h00'].size != 0 and data_matrix['s00'].size != 0:
         hc = data_matrix['h00']
-        hctl = np.matrix.getH(data_matrix['hn1'])
+        hctl = data_matrix['hn1']
         hctr = data_matrix['hp1']
         s00 = data_matrix['s00']
         sctl = data_matrix['sn1']
         sctr = data_matrix['sp1']
     elif data_matrix['h00'].size != 0 and data_matrix['s00'].size == 0:
         hc = data_matrix['h00']
-        hctl = np.matrix.getH(data_matrix['hn1'])
+        hctl = data_matrix['hn1']
         hctr = data_matrix['hp1']
         s00 = np.eye(len(hc))
         sctl = np.zeros(hc.shape)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         
     if 'hc' in locals():    
         write_data(location, 'output', args.Folder_Name, message=['=== Matrix has been loaded ==='])
-        e_cap = np.linspace(-2, 2, 1000)
+        e_cap = np.linspace(-10, 10, 1000)
         e_cap = e_cap+1j*0.001    
          
         sigma_l_trace = np.empty(len(e_cap), dtype=complex)
@@ -83,17 +83,18 @@ if __name__ == '__main__':
         time_gs = 0
          
         for idx1, item_E in enumerate(e_cap):
-            g00_l, time_took  = self_energy(item_E, hc, np.matrix.getH(hctl), s00, sctl)
-            sigma_l = np.matrix.getH(item_E*sctl - hctl) @ g00_l @ (item_E*sctl - hctl)
+            g00_l, time_took  = self_energy(item_E, hc, hctl, s00, sctl)
+            sigma_l = (item_E*sctl - hctl) @ g00_l @ np.matrix.getH(item_E*sctl - hctl)
             time_g00_l = time_g00_l + time_took
              
             g00_r, time_took  = self_energy(item_E, hc, hctr, s00, sctr)
             sigma_r = (item_E*sctr - hctr) @ g00_r @ np.matrix.getH(item_E*sctr - hctr)
             time_g00_r = time_g00_r + time_took
-             
+                         
             gs[idx1], time_took = system_gs(item_E, hc, s00, sigma_l, sigma_r)
             time_gs = time_gs + time_took
             gs_tra[idx1] = np.trace(gs[idx1]@s00)
+#             gs_tra[idx1] = np.trace(1j*(gs[idx1] - np.matrix.getH(gs[idx1])))
     #            
             gamma_l = 1j*(sigma_l-np.matrix.getH(sigma_l))
             gamma_r = 1j*(sigma_r-np.matrix.getH(sigma_r))

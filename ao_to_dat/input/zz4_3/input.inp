@@ -1,0 +1,336 @@
+@SET GLOBAL_RUN_TYPE       ENERGY_FORCE 
+ 
+@SET SYSNAME               zz_4_3
+@SET	LX	 12.78
+@SET	LY	 9.8380
+@SET	LZ	 10.8
+@SET PERIODICITY            xyz
+@SET POISSON_POISSON_SOLVER periodic
+
+@SET SWITCH_LSD             F
+@SET CHARGE                 0
+
+@SET SCF_ADDED_MOS          1000
+@SET SCF_EPS_SCF            1.0E-7
+@SET SCF_MAX_SCF            1000
+@SET SCF_SCF_GUESS          restart
+@SET SWITCH_SCF_SMEAR       T
+
+@SET PRINT_MO_EIGENVALUES   T
+@SET PRINT_MO_EIGENVECTORS  T
+@SET PRINT_MO_CUBES_NHOMO   0
+@SET PRINT_MO_CUBES_NLUMO   0
+@SET PRINT_MO1              0
+@SET PRINT_MO2             -2
+
+@SET SWITCH_LOCALIZE        F 
+@SET ENERGY1              -15.
+@SET ENERGY2                5.
+@SET PRINT_LMO1             0       
+@SET PRINT_LMO2            -2
+@SET PRINT_LMO_FILE         T 
+@SET PRINT_LDOS_COMPONENTS  T
+
+
+!----------------------------------------------------------------------------!
+
+&GlOBAL
+   PROJECT 	$SYSNAME
+   RUN_TYPE 	$GLOBAL_RUN_TYPE
+   PRINT_LEVEL  low
+   WALLTIME 	162000
+&END GLOBAL
+
+!----------------------------------------------------------------------------!
+
+&FORCE_EVAL
+   METHOD Quickstep
+
+ ! needed for CELL_OPT
+ !STRESS_TENSOR ANALYTICAL
+
+!-------------------------------------!
+
+   &DFT
+      LSD $SWITCH_LSD
+      BASIS_SET_FILE_NAME /software/all/chem/cp2k/cp2k-5.1/data/BASIS_MOLOPT
+      POTENTIAL_FILE_NAME /software/all/chem/cp2k/cp2k-5.1/data/POTENTIAL
+      CHARGE ${CHARGE}    
+      
+      &MGRID
+         CUTOFF 500
+         NGRIDS 5
+         REL_CUTOFF 50
+      &END MGRID      
+
+      &QS
+         EXTRAPOLATION ASPC
+         EXTRAPOLATION_ORDER 3 
+      &END QS
+
+      &SCF
+         added_mos $SCF_ADDED_MOS
+         eps_scf $SCF_EPS_SCF      
+         max_scf $SCF_MAX_SCF       
+         scf_guess $SCF_SCF_GUESS      
+         &mixing
+            method broyden_mixing
+            alpha   0.1
+            beta    1.5
+            nbroyden 8 
+         &end
+         &diagonalization
+         &end
+         @if ($SWITCH_SCF_SMEAR == T)
+         &smear
+            method fermi_dirac
+            electronic_temperature [K] 300
+         &end  
+         @endif         
+      &END SCF 
+
+      &XC
+      	  &xc_functional pbe
+          &end
+
+          &vdW_POTENTIAL
+             DISPERSION_FUNCTIONAL PAIR_POTENTIAL
+             &PAIR_POTENTIAL
+                TYPE DFTD2
+                REFERENCE_FUNCTIONAL PBE
+             &END PAIR_POTENTIAL
+          &END vdW_POTENTIAL
+
+      &END XC
+
+!      &KPOINTS
+!          SCHEME MONKHORST-PACK 3 3 3
+!          SCHEME GENERAL
+!      &END KPOINTS
+
+      &POISSON
+         periodic $PERIODICITY
+         poisson_solver $POISSON_POISSON_SOLVER
+      &END POISSON
+      
+      &PRINT
+!         &mo
+!            eigenvalues $PRINT_MO_EIGENVALUES
+!            eigenvectors $PRINT_MO_EIGENVECTORS
+!            mo_index_range ${PRINT_MO1} ${PRINT_MO2}
+!            occupation_numbers
+!            @if ($PRINT_LMO_FILE == T)
+!            filename =${SYSNAME}.lmo 
+!            @endif
+!            &each
+!               qs_scf 0
+!            &end
+!         &end	
+!         &mo_cubes
+!            NHOMO ${PRINT_MO_CUBES_NHOMO} 
+!            NLUMO ${PRINT_MO_CUBES_NLUMO}
+!            &each
+!               qs_scf 0
+!            &end         
+!         &end
+
+!         &E_DENSITY_CUBE
+!	    &each
+!	      qs_scf 0
+!	    &end
+!         &end 
+!--new
+!	  &TOT_DENSITY_CUBE
+!	    &each
+!	      qs_scf 0
+!	    &end
+!	  &END
+
+
+!	  &MULLIKEN
+!	    &each
+!	      qs_scf 0
+!	    &end
+!	  &END MULLIKEN
+
+!	  &PDOS
+!components ${PRINT_LDOS_COMPONENTS}
+!	    &each
+!	      qs_scf 0
+!	    &end
+
+!	  &LDOS
+!components ${PRINT_LDOS_COMPONENTS}
+!LIST     1 
+!	  &END
+
+!	  &R_LDOS
+!LIST     1     
+!	  &END
+
+!	  &end PDOS
+
+!&V_HARTREE_CUBE
+!	    &each
+!	      qs_scf 0
+!	    &end
+!&END V_HARTREE_CUBE
+
+!&EFIELD_CUBE
+!	    &each
+!	      qs_scf 0
+!	    &end
+!&END
+
+        &ao_matrices LOW
+            kohn_sham_matrix
+            overlap
+            &each
+!              just_energy 0
+              QS_SCF 0
+            &end
+!            ADD_LAST SYMBOLIC
+!            LOG_PRINT_KEY
+            filename =${SYSNAME}.ao 
+        &end		
+      &END PRINT       
+      
+
+   &END DFT
+
+!-------------------------------------!
+
+   &SUBSYS
+ 
+      &CELL
+         abc ${LX} ${LY} ${LZ}
+         periodic $PERIODICITY
+!	@INCLUDE   MULTIPLE_UNIT_CELL.inp
+      &END CELL
+
+      &TOPOLOGY
+         COORD_FILE_FORMAT XYZ
+         COORD_FILE_NAME ${SYSNAME}.xyz
+!         &CENTER_COORDINATES
+!           center_point 0. 0. 0.
+!         &END
+!        @INCLUDE   MULTIPLE_UNIT_CELL.inp
+      &END TOPOLOGY
+ 
+      &KIND H
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q1
+      &END KIND
+      
+      &KIND C
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q4
+      &END KIND
+
+      &KIND Cr
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q14
+      &END KIND
+
+      &KIND Cu
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q11
+      &END KIND
+
+      &KIND N
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q5
+      &END KIND
+      &KIND Ni
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q18
+      &END KIND
+      &KIND O
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q6
+      &END KIND
+      &KIND Co
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q17
+      &END KIND
+      &KIND Pd
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q18
+      &END KIND      
+      &KIND Ag
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q11
+      &END KIND
+      &KIND Au
+         BASIS_SET SZV-MOLOPT-SR-GTH
+         POTENTIAL GTH-PBE-q19
+      &END KIND      
+
+   &END SUBSYS
+   
+   
+!-------------------------------------!
+
+&END FORCE_EVAL
+
+!----------------------------------------------------------------------------!
+
+!&MOTION
+!
+!   &CELL_OPT
+!      OPTIMIZER CG
+!      MAX_ITER 1000
+!      &CG
+!      &END CG
+!   &END CELL_OPT
+!
+!   &MD
+!      ENSEMBLE NVT
+!      STEPS 10000
+!      TIMESTEP 0.5
+!      TEMPERATURE 100.0
+!      &THERMOSTAT
+!         &NOSE
+!            LENGTH            3
+!            YOSHIDA           3
+!            TIMECON           10 
+!            MTS               2
+!         &END NOSE
+!      &END THERMOSTAT
+!   &END MD
+!   
+!   &PRINT
+!      &TRAJECTORY
+!         FORMAT PDB
+!      &END TRAJECTORY
+!   &END PRINT  
+!
+!&END MOTION
+
+!----------------------------------------------------------------------------!
+!----------------------------------------------------------------------------!
+!----------------------------------------------------------------------------!
+
+!      &QS
+!         EXTRAPOLATION ASPC
+!         EXTRAPOLATION_ORDER 3 
+!        ls_scf
+!      &END QS
+
+!      &LS_SCF
+!         &chebyshev
+!            &dos on
+!            &end
+!         &end
+!      &END LS_SCF
+
+!         &ot
+!            #ENERGY_GAP 0.001
+!            #LINESEARCH 2PNT
+!            MINIMIZER  DIIS
+!            PRECONDITIONER FULL_KINETIC
+!            PRECOND_SOLVER INVERSE_CHOLESKY
+!            #STEPSIZE 0.1
+!         &end
+
+

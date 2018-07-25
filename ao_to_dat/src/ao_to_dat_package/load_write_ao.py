@@ -76,7 +76,7 @@ def load_ao(location, input_type, target_folder_name):
                                 if len(line) > 4:
                                     data_value = []
                                     for item in line[4:]:
-                                        data_value.append(float(item))
+                                        data_value.append(float(item)*27.2114)
                                     try:
                                         ks_matrix[int(line[0])-1].extend(data_value)
                                     except IndexError:

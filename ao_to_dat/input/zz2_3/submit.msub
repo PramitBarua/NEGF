@@ -1,0 +1,21 @@
+#!/bin/bash
+#MSUB -l nodes=1:ppn=20
+#MSUB -l walltime=0:00:10:00
+#MSUB -m ae
+#MSUB -M uceyf@student.kit.edu
+
+module purge
+module load chem/cp2k/5.1-popt
+module list
+
+echo
+date
+echo
+
+cd $PBS_O_WORKDIR
+
+$CP2K input.inp
+
+echo
+date
+echo

@@ -17,7 +17,7 @@ from src.NEGF_package.load_write_files_v1 import load_input
 import os
 import numpy as np
 import matplotlib
-matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+# matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import matplotlib.pyplot as plt
 
 def display_data(e_cap, gs_tra, transmission_tra, target_folder_name, show_plot):    
@@ -53,8 +53,8 @@ def display_data(e_cap, gs_tra, transmission_tra, target_folder_name, show_plot)
     plt.grid()
     fig2.savefig(os.path.join(target_location, 'Transmission.png'))
  
-#     if show_plot == 'y' or show_plot == 'Y':
-#         plt.show()
+    if show_plot == 'y' or show_plot == 'Y':
+        plt.show()
     
 if __name__ == '__main__':
     location = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))

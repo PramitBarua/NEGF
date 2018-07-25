@@ -11,3 +11,16 @@ average time to calculate gs 0.000014
 time took for total calculation 28.980883 
 
 === Display ===
+=== NEGF starts ===
+=== Matrix has been loaded ===
+=== NEGF has completed ===
+=== Saving Data ===
+
+=== Time ===
+time took to load file: 0.298600
+average time to calculate g00_l 0.014246
+average time to calculate g00_r 0.013162
+average time to calculate gs 0.000014
+time took for total calculation 29.588043 
+
+=== Display ===

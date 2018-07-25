@@ -25,6 +25,9 @@ def load_input(location, input_type, target_folder_name):
     target_location = os.path.join(location, input_type, target_folder_name)
     total_time = 0.0
     
+    ks_matrix = np.array([])
+    overlap_matrix = np.array([])
+        
     if os.path.isdir(target_location):
         f = []
         for (dirpath, dirnames, filenames) in os.walk(target_location):
@@ -40,15 +43,38 @@ def load_input(location, input_type, target_folder_name):
                                               target_folder_name, file), 
                                               delimiter=',')
     if ks_matrix.size != 0:
-        hn1, h00, hp1 = matrix_split(ks_matrix)
-        variable_name = ['hn1', 'h00', 'hp1']
-        for idx, item in enumerate([hn1, h00, hp1]):
+        hn1, h00, hp1, status = matrix_split(ks_matrix)
+        if status:
+            variable_name = ['hn1', 'h00', 'hp1']
+            for idx, item in enumerate([hn1, h00, hp1]):
+                write_data(location, 'output', target_folder_name,
+                           variable_name[idx] + '.dat',
+                           num_data=item)
             write_data(location, 'output', target_folder_name,
-                       variable_name[idx] + '.dat',
-                       num_data=item)
+                       'output.out',
+                       message=['=== Hamiltonian generated ==='])
+        else:
+            write_data(location, 'output', target_folder_name,
+                       'output.out',
+                       message=['Error: Matrix dimension can not be divisible by 3'])
+            
+        
         
     if overlap_matrix.size != 0:
-        sn1, s00, sp1 = matrix_split(overlap_matrix)
+        sn1, s00, sp1, status = matrix_split(overlap_matrix)
+        if status:
+            variable_name = ['sn1', 's00', 'sp1']
+            for idx, item in enumerate([sn1, s00, sp1]):
+                write_data(location, 'output', target_folder_name,
+                           variable_name[idx] + '.dat',
+                           num_data=item)
+            write_data(location, 'output', target_folder_name,
+                       'output.out',
+                       message=['=== overlap generated ==='])
+        else:
+            write_data(location, 'output', target_folder_name,
+                       'output.out',
+                       message=['Error: Matrix dimension can not be divisible by 3'])
         variable_name = ['sn1', 's00', 'sp1']
         for idx, item in enumerate([sn1, s00, sp1]):
             write_data(location, 'output', target_folder_name,
@@ -59,21 +85,39 @@ def load_input(location, input_type, target_folder_name):
 def matrix_split(matrix):
     matrix_shape = matrix.shape
     if matrix.shape[0]%3 == 0 and matrix.shape[1]%3 == 0:
+        A = matrix[:int(matrix_shape[0]/3), 
+                    :int(matrix_shape[0]/3)]
+        K = matrix[int(matrix_shape[0]*2/3):, 
+                   int(matrix_shape[0]*2/3):]
+        up_middle_matrix = matrix[:int(matrix_shape[0]/3), 
+                                  int(matrix_shape[0]/3):int(matrix_shape[0]*2/3)]
         left_matrix = matrix[int(matrix_shape[0]/3):int(matrix_shape[0]*2/3), 
                              :int(matrix_shape[0]/3)]
         middle_matrix = matrix[int(matrix_shape[0]/3):int(matrix_shape[0]*2/3), 
                              int(matrix_shape[0]/3):int(matrix_shape[0]*2/3)]
         right_matrix = matrix[int(matrix_shape[0]/3):int(matrix_shape[0]*2/3), 
                              int(matrix_shape[0]*2/3):]
-        return left_matrix, middle_matrix, right_matrix
+        low_middle_matrix = matrix[int(matrix_shape[0]*2/3):, 
+                             int(matrix_shape[0]/3):int(matrix_shape[0]*2/3)] 
+        
+        if np.all(up_middle_matrix == np.matrix.getH(left_matrix)):
+            print('B and D+ is the same')
+        
+        if np.all(right_matrix == np.matrix.getH(low_middle_matrix)):
+            print('F and H+ is the same')
+        
+        if np.all(middle_matrix == A) and np.all(middle_matrix == K):
+            print('Diagonal elements are the same')
+                
+        status = True
+        return left_matrix, middle_matrix, right_matrix, status
     else:
         left_matrix = np.array([])
         middle_matrix = np.array([])
         right_matrix = np.array([])
-        write_data(location, 'output', target_folder_name,
-                   'output.out',
-                   message=['Error: Matrix dimension can not be divisible by 3'])
-        return left_matrix, middle_matrix, right_matrix
+        status = False
+        return left_matrix, middle_matrix, right_matrix, status
+
 
 def write_data(location, input_type, target_folder_name, file_name, **kargs):
 
