@@ -1,0 +1,24 @@
+file_format:
+   Global:
+      input_dir: address of the directory where system inputs are stored
+      output_dir: address of the directory where system outputs are stored
+   ao_to_dat_input: 
+      ao_file_name: name of the *.ao file (generally same as *.xyz file of the system)
+   generate_hamiltonian:
+      number_of_unit: number of unit block in the z axis (check the figure of the system) if it is not 3 please check the code, code might not work properly
+   NEGF_input:
+      plot: if this is 'y' then program will save the figure of 'DOS' and 'Transmission' in the folder 'fig'
+      time: if this is 'y' then program will save the time it took to run different segments of the code
+
+Input:
+   Global:
+      input_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz2_3
+      output_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz2_3
+   ao_to_dat_input:
+      ao_file_name: zz_2_3.ao
+   generate_hamiltonian:
+      number_of_unit: 3
+   NEGF_input:
+      plot: y
+      time: y
+   
