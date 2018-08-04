@@ -15,6 +15,7 @@ __email__ = ["pramit.barua@student.kit.edu", "pramit.barua@gmail.com"]
 import os
 import sys
 import numpy as np
+import argparse
 import time
 
 sys.path.append(os.path.abspath('../NEGF_global'))
@@ -24,11 +25,13 @@ from yaml_file_loader import yaml_file_loader
 from ao_file_loader import ao_file_loader
 
 if __name__ == '__main__':
-    # get the current location
-    location = os.path.realpath(os.path.join(os.getcwd(),
-                                             os.path.dirname(__file__)))
+    parser = argparse.ArgumentParser(description='Calculate and display DOS '+
+                                     'and transmission of the quantum system.')
+    parser.add_argument("Folder_Name",
+                        help="Name of the folder that contains 'system_parameter.yml' file")
+    args = parser.parse_args()
 
-    input_parameter = yaml_file_loader(location, 'system_parameter.yml')
+    input_parameter = yaml_file_loader(args.Folder_Name, 'system_parameter.yml')
 
     start_time = time.time()
     ks_matrix, overlap_matrix = ao_file_loader(input_parameter['Global']['input_dir'])

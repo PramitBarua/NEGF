@@ -16,7 +16,7 @@ __email__ = ["pramit.barua@student.kit.edu", "pramit.barua@gmail.com"]
 # from src.ao_to_dat_package.load_write_ao import write_data
 
 import numpy as np
-import time
+import argparse
 import os
 import sys
 
@@ -113,11 +113,13 @@ def matrix_split(matrix, num_unit):
 
 
 if __name__ == '__main__':
-    #get the current location
-    location = os.path.realpath(os.path.join(os.getcwd(),
-                                             os.path.dirname(__file__)))
+    parser = argparse.ArgumentParser(description='Calculate and display DOS '+
+                                     'and transmission of the quantum system.')
+    parser.add_argument("Folder_Name",
+                        help="Name of the folder that contains 'system_parameter.yml' file")
+    args = parser.parse_args()
 
-    input_parameter = yaml_file_loader(location, 'system_parameter.yml')
+    input_parameter = yaml_file_loader(args.Folder_Name, 'system_parameter.yml')
 
     generate_hamiltonian(input_parameter['Global']['input_dir'],
                          input_parameter['Global']['output_dir'],

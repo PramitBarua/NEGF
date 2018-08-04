@@ -12,8 +12,8 @@ file_format:
 
 Input:
    Global:
-      input_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz2_3
-      output_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz2_3
+      input_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz4_3
+      output_dir: C:\Users\PRAMIT\Documents\MEGA\Master thesis\pramit\python code\related to thesis\NEGF_v2\input\zz4_3
    ao_to_dat_input:
       ao_file_name: zz_2_3.ao
    generate_hamiltonian:
